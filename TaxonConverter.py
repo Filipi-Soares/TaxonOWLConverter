@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[6]:
-
-
 import requests
 
 def fetch_gbif_data(scientific_name):
@@ -11,6 +5,12 @@ def fetch_gbif_data(scientific_name):
     url = f"https://api.gbif.org/v1/species/match?name={scientific_name.replace(' ', '%20')}"
     response = requests.get(url)
     return response.json() if response.status_code == 200 else None
+
+def fetch_synonyms(species_key):
+    """Fetch synonyms for a given species key from GBIF API."""
+    url = f"https://api.gbif.org/v1/species/{species_key}/synonyms"
+    response = requests.get(url)
+    return response.json() if response.status_code == 200 else []
 
 def accumulate_taxa(data, taxa):
     """Accumulate unique taxa and their relationships."""
@@ -24,6 +24,21 @@ def accumulate_taxa(data, taxa):
                     "rank": key,
                     "parentKey": str(data.get(f"{keys[keys.index(key)-1]}Key", "1")) if key != 'kingdom' else None
                 }
+
+def validate_accepted_name(data, taxa):
+    """Ensure that only the accepted name is included in the taxa."""
+    if 'speciesKey' in data:
+        synonyms = fetch_synonyms(data['speciesKey'])
+        for synonym in synonyms:
+            if 'acceptedKey' in synonym and synonym['acceptedKey'] == data['speciesKey']:
+                # Ensure that the accepted name is in the taxa dictionary
+                accepted_key_id = str(data['speciesKey'])
+                if accepted_key_id not in taxa:
+                    taxa[accepted_key_id] = {
+                        "name": data['scientificName'],
+                        "rank": 'species',
+                        "parentKey": str(data['genusKey'])
+                    }
 
 def generate_owl(taxa):
     """Generate OWL representation from accumulated taxa."""
@@ -40,10 +55,6 @@ def generate_owl(taxa):
 
     owl_parts.append("</rdf:RDF>")
     return "\n".join(owl_parts)
-
-
-# In[10]:
-
 
 species_names = [
     "Apis mellifera",
@@ -64,13 +75,12 @@ species_names = [
 taxa = {}
 for name in species_names:
     data = fetch_gbif_data(name)
-    accumulate_taxa(data, taxa)
+    if data:
+        accumulate_taxa(data, taxa)
+        validate_accepted_name(data, taxa)
 
 owl_data = generate_owl(taxa)
 print(owl_data)
-
-
-# In[ ]:
 
 
 
