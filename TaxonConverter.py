@@ -62,6 +62,7 @@ species_names = [
     "Capra aegagrus hircus",
     "Ovis aries",
     "Sus",
+    "Bombyx mori",
     "Prochilodus cearensis",
     "Prochilodus scrofa",
     "Prochilodus margravii",
@@ -81,7 +82,3 @@ for name in species_names:
 
 owl_data = generate_owl(taxa)
 print(owl_data)
-
-
-
-
