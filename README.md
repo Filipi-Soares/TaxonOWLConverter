@@ -1,4 +1,4 @@
-# GBIF Taxonomy to OWL Converter
+# GBIF Taxonomy OWLizer
 
 ## Overview
 
