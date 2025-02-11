@@ -1,13 +1,26 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
+import time
 
 app = Flask(__name__)
+CORS(app)  # Allow frontend to call API
 
-def fetch_gbif_data(scientific_name):
-    """Fetch taxonomic classification from GBIF API."""
+def fetch_gbif_data(scientific_name, retries=3):
+    """Fetch taxonomic classification from GBIF API with retries."""
     url = f"https://api.gbif.org/v1/species/match?name={scientific_name.replace(' ', '%20')}"
-    response = requests.get(url)
-    return response.json() if response.status_code == 200 else None
+    
+    for attempt in range(retries):
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            if "scientificName" not in data:
+                return None  # Handle missing data gracefully
+            return data
+        print(f"Retrying {scientific_name}... Attempt {attempt + 1}")
+        time.sleep(2)  # Wait before retrying
+    
+    return None
 
 def fetch_synonyms(species_key):
     """Fetch synonyms for a given species key from GBIF API."""
@@ -65,16 +78,24 @@ def home():
 @app.route('/generate_owl', methods=['POST'])
 def generate_owl_api():
     request_data = request.json
+    print("Received request:", request_data)  # Debugging
+
     species_names = request_data.get("species", [])
+    if not species_names:
+        return jsonify({"error": "No species provided"}), 400  # Handle empty input
 
     taxa = {}
     for name in species_names:
         data = fetch_gbif_data(name)
+        print(f"Fetched GBIF data for {name}:", data)  # Debugging
+
         if data:
             accumulate_taxa(data, taxa)
             validate_accepted_name(data, taxa)
-
+    
     owl_data = generate_owl(taxa)
+    print("Generated OWL:", owl_data)  # Debugging
+
     return jsonify({"owl": owl_data})
 
 if __name__ == '__main__':
