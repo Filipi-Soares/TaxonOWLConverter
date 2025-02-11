@@ -115,41 +115,6 @@
             });
         }
 
-        function parseOWLToHierarchy(owlData) {
-            let lines = owlData.split("\n");
-            let nodeMap = {};
-            let treeData = [];
-
-            lines.forEach(line => {
-                let nameMatch = line.match(/<rdfs:label xml:lang="lat">(.*?)<\/rdfs:label>/);
-                let parentMatch = line.match(/<rdfs:subClassOf rdf:resource="https:\/\/www\.gbif\.org\/species\/(\d+)"/);
-
-                if (nameMatch) {
-                    let nodeName = nameMatch[1].trim();
-                    let parentKey = parentMatch ? parentMatch[1] : "root";
-
-                    if (!nodeMap[nodeName]) {
-                        nodeMap[nodeName] = { id: nodeName, text: nodeName, children: [] };
-                    }
-
-                    if (parentKey === "root") {
-                        treeData.push(nodeMap[nodeName]);
-                    } else {
-                        let parentName = nodeMap[parentKey] ? nodeMap[parentKey].text : `Unknown (${parentKey})`;
-
-                        if (!nodeMap[parentName]) {
-                            nodeMap[parentName] = { id: parentName, text: parentName, children: [] };
-                            treeData.push(nodeMap[parentName]);
-                        }
-
-                        nodeMap[parentName].children.push(nodeMap[nodeName]);
-                    }
-                }
-            });
-
-            return treeData;
-        }
-
         document.getElementById("downloadButton").addEventListener("click", function() {
             if (!owlData) {
                 alert("No OWL data available to download.");
