@@ -117,8 +117,8 @@
 
         function parseOWLToHierarchy(owlData) {
             let lines = owlData.split("\n");
-            let treeData = [];
             let nodeMap = {};
+            let treeData = [];
 
             lines.forEach(line => {
                 let nameMatch = line.match(/<rdfs:label xml:lang="lat">(.*?)<\/rdfs:label>/);
@@ -135,11 +135,14 @@
                     if (parentKey === "root") {
                         treeData.push(nodeMap[nodeName]);
                     } else {
-                        if (!nodeMap[parentKey]) {
-                            nodeMap[parentKey] = { id: parentKey, text: `Unknown (${parentKey})`, children: [] };
-                            treeData.push(nodeMap[parentKey]);
+                        let parentName = nodeMap[parentKey] ? nodeMap[parentKey].text : `Unknown (${parentKey})`;
+
+                        if (!nodeMap[parentName]) {
+                            nodeMap[parentName] = { id: parentName, text: parentName, children: [] };
+                            treeData.push(nodeMap[parentName]);
                         }
-                        nodeMap[parentKey].children.push(nodeMap[nodeName]);
+
+                        nodeMap[parentName].children.push(nodeMap[nodeName]);
                     }
                 }
             });
