@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GBIF Taxonomy OWLizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container mt-5">
+
+    <h1 class="text-center">GBIF Taxonomy OWLizer</h1>
+    <p class="text-center">Enter species names to generate an OWL taxonomy.</p>
+
+    <div class="mb-3">
+        <label for="speciesInput" class="form-label">Enter species names (comma-separated)</label>
+        <input type="text" class="form-control" id="speciesInput" placeholder="e.g., Apis mellifera, Bos taurus">
+    </div>
+
+    <button id="generateButton" class="btn btn-primary">Generate OWL</button>
+
+    <h3 class="mt-4">OWL Output:</h3>
+    <pre id="owlOutput" class="border p-3" style="white-space: pre-wrap; background: #f8f9fa;"></pre>
+
+    <script>
+        document.getElementById("generateButton").addEventListener("click", function() {
+            const speciesInput = document.getElementById("speciesInput").value;
+            if (!speciesInput.trim()) {
+                alert("Please enter at least one species name.");
+                return;
+            }
+
+            fetch("https://your-backend-url.com/generate_owl", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ species: speciesInput.split(",").map(s => s.trim()) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("owlOutput").textContent = data.owl;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Failed to fetch OWL data.");
+            });
+        });
+    </script>
+
+</body>
+</html>
