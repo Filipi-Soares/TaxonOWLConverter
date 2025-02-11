@@ -58,6 +58,10 @@ def generate_owl(taxa):
     owl_parts.append("</rdf:RDF>")
     return "\n".join(owl_parts)
 
+@app.route('/')
+def home():
+    return "TaxonOWLConverter API is running!", 200
+
 @app.route('/generate_owl', methods=['POST'])
 def generate_owl_api():
     request_data = request.json
@@ -74,4 +78,4 @@ def generate_owl_api():
     return jsonify({"owl": owl_data})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080)
