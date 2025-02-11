@@ -30,47 +30,70 @@
         let owlData = "";
 
         document.getElementById("generateButton").addEventListener("click", function() {
-            const speciesInput = document.getElementById("speciesInput").value;
-            if (!speciesInput.trim()) {
+            const speciesInput = document.getElementById("speciesInput").value.trim();
+            if (!speciesInput) {
                 alert("Please enter at least one species name.");
                 return;
             }
 
-            document.getElementById("loadingMessage").style.display = "block"; // Show loading message
+            const speciesKey = speciesInput.toLowerCase(); // Normalize key for cache storage
+            const cachedData = localStorage.getItem(speciesKey);
 
-            function fetchOWLData(retryCount = 0) {
-                fetch("https://taxonowlconverter.onrender.com/generate_owl", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ species: speciesInput.split(",").map(s => s.trim()) })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Server error. Retrying...");
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    owlData = data.owl; // Store OWL data for download
-                    document.getElementById("owlOutput").textContent = owlData;
-                    document.getElementById("loadingMessage").style.display = "none"; // Hide loading message
-                    document.getElementById("downloadButton").style.display = "block"; // Show download button
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-                    if (retryCount < 3) {
-                        setTimeout(() => fetchOWLData(retryCount + 1), 5000); // Retry after 5 seconds
-                    } else {
-                        document.getElementById("loadingMessage").style.display = "none"; // Hide loading message
-                        alert("Failed to fetch OWL data after multiple attempts. Please try again later.");
-                    }
-                });
+            if (cachedData) {
+                displayCachedData(cachedData);
+            } else {
+                fetchOWLData(speciesKey, speciesInput);
             }
-
-            fetchOWLData(); // Initial request
         });
+
+        function displayCachedData(cachedData) {
+            document.getElementById("loadingMessage").textContent = "✅ Loaded from cache!";
+            document.getElementById("loadingMessage").style.display = "block";
+
+            setTimeout(() => {
+                document.getElementById("loadingMessage").style.display = "none";
+            }, 2000);
+
+            owlData = cachedData;
+            document.getElementById("owlOutput").textContent = owlData;
+            document.getElementById("downloadButton").style.display = "block";
+        }
+
+        function fetchOWLData(speciesKey, speciesInput, retryCount = 0) {
+            document.getElementById("loadingMessage").style.display = "block";
+
+            fetch("https://taxonowlconverter.onrender.com/generate_owl", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ species: speciesInput.split(",").map(s => s.trim()) })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Server error. Retrying...");
+                }
+                return response.json();
+            })
+            .then(data => {
+                owlData = data.owl;
+                document.getElementById("owlOutput").textContent = owlData;
+                document.getElementById("loadingMessage").style.display = "none";
+                document.getElementById("downloadButton").style.display = "block";
+
+                // Store in cache
+                localStorage.setItem(speciesKey, owlData);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                if (retryCount < 3) {
+                    setTimeout(() => fetchOWLData(speciesKey, speciesInput, retryCount + 1), 5000);
+                } else {
+                    document.getElementById("loadingMessage").style.display = "none";
+                    alert("Failed to fetch OWL data after multiple attempts. Please try again later.");
+                }
+            });
+        }
 
         document.getElementById("downloadButton").addEventListener("click", function() {
             if (!owlData) {
