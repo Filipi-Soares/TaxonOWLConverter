@@ -121,21 +121,26 @@
             let nodeMap = {};
 
             lines.forEach(line => {
-                let match = line.match(/<rdfs:subClassOf rdf:resource="https:\/\/www\.gbif\.org\/species\/(\d+)"/);
-                if (match) {
-                    let parentKey = match[1];
+                let nameMatch = line.match(/<rdfs:label xml:lang="lat">(.*?)<\/rdfs:label>/);
+                let parentMatch = line.match(/<rdfs:subClassOf rdf:resource="https:\/\/www\.gbif\.org\/species\/(\d+)"/);
 
-                    let nameMatch = line.match(/<rdfs:label xml:lang="lat">(.*?)<\/rdfs:label>/);
-                    let nodeName = nameMatch ? nameMatch[1] : "Unknown";
+                if (nameMatch) {
+                    let nodeName = nameMatch[1].trim();
+                    let parentKey = parentMatch ? parentMatch[1] : "root";
 
-                    if (!nodeMap[parentKey]) {
-                        nodeMap[parentKey] = { id: parentKey, text: nodeName, children: [] };
-                        treeData.push(nodeMap[parentKey]);
+                    if (!nodeMap[nodeName]) {
+                        nodeMap[nodeName] = { id: nodeName, text: nodeName, children: [] };
                     }
 
-                    let node = { id: nodeName, text: nodeName, children: [] };
-                    nodeMap[parentKey].children.push(node);
-                    nodeMap[nodeName] = node;
+                    if (parentKey === "root") {
+                        treeData.push(nodeMap[nodeName]);
+                    } else {
+                        if (!nodeMap[parentKey]) {
+                            nodeMap[parentKey] = { id: parentKey, text: `Unknown (${parentKey})`, children: [] };
+                            treeData.push(nodeMap[parentKey]);
+                        }
+                        nodeMap[parentKey].children.push(nodeMap[nodeName]);
+                    }
                 }
             });
 
