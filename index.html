@@ -17,11 +17,18 @@
     </div>
 
     <button id="generateButton" class="btn btn-primary">Generate OWL</button>
+    <button id="downloadButton" class="btn btn-success mt-2" style="display: none;">Download OWL File</button>
+
+    <div id="loadingMessage" class="mt-3 text-center text-warning" style="display: none;">
+        ⏳ Fetching OWL data... Please wait.
+    </div>
 
     <h3 class="mt-4">OWL Output:</h3>
     <pre id="owlOutput" class="border p-3" style="white-space: pre-wrap; background: #f8f9fa;"></pre>
 
     <script>
+        let owlData = "";
+
         document.getElementById("generateButton").addEventListener("click", function() {
             const speciesInput = document.getElementById("speciesInput").value;
             if (!speciesInput.trim()) {
@@ -29,21 +36,55 @@
                 return;
             }
 
-            fetch("https://taxonowlconverter.onrender.com/generate_owl", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ species: speciesInput.split(",").map(s => s.trim()) })
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("owlOutput").textContent = data.owl;
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                alert("Failed to fetch OWL data.");
-            });
+            document.getElementById("loadingMessage").style.display = "block"; // Show loading message
+
+            function fetchOWLData(retryCount = 0) {
+                fetch("https://taxonowlconverter.onrender.com/generate_owl", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ species: speciesInput.split(",").map(s => s.trim()) })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Server error. Retrying...");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    owlData = data.owl; // Store OWL data for download
+                    document.getElementById("owlOutput").textContent = owlData;
+                    document.getElementById("loadingMessage").style.display = "none"; // Hide loading message
+                    document.getElementById("downloadButton").style.display = "block"; // Show download button
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    if (retryCount < 3) {
+                        setTimeout(() => fetchOWLData(retryCount + 1), 5000); // Retry after 5 seconds
+                    } else {
+                        document.getElementById("loadingMessage").style.display = "none"; // Hide loading message
+                        alert("Failed to fetch OWL data after multiple attempts. Please try again later.");
+                    }
+                });
+            }
+
+            fetchOWLData(); // Initial request
+        });
+
+        document.getElementById("downloadButton").addEventListener("click", function() {
+            if (!owlData) {
+                alert("No OWL data available to download.");
+                return;
+            }
+
+            const blob = new Blob([owlData], { type: "application/owl+xml" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "taxonomy.owl";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         });
     </script>
 
