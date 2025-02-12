@@ -6,13 +6,11 @@
     <title>GBIF Taxonomy OWLizer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css">
 </head>
 <body class="container mt-5">
 
     <h1 class="text-center">GBIF Taxonomy OWLizer</h1>
-    <p class="text-center">Enter species names to generate an OWL taxonomy and visualize the classification hierarchy.</p>
+    <p class="text-center">Enter species names to generate an OWL taxonomy.</p>
 
     <div class="mb-3">
         <label for="speciesInput" class="form-label">Enter species names (comma-separated)</label>
@@ -28,9 +26,6 @@
 
     <h3 class="mt-4">OWL Output:</h3>
     <pre id="owlOutput" class="border p-3" style="white-space: pre-wrap; background: #f8f9fa;"></pre>
-
-    <h3 class="mt-4">Taxonomy Hierarchy:</h3>
-    <div id="taxonomyTree" class="border p-3"></div>
 
     <script>
         let owlData = "";
@@ -63,7 +58,6 @@
             owlData = cachedData;
             document.getElementById("owlOutput").textContent = owlData;
             document.getElementById("downloadButton").style.display = "block";
-            generateTaxonomyTree(owlData);
         }
 
         function fetchOWLData(speciesKey, speciesInput, retryCount = 0) {
@@ -90,9 +84,6 @@
 
                 // Store in cache
                 localStorage.setItem(speciesKey, owlData);
-
-                // Generate taxonomy hierarchy
-                generateTaxonomyTree(owlData);
             })
             .catch(error => {
                 console.error("Error:", error);
@@ -101,17 +92,6 @@
                 } else {
                     document.getElementById("loadingMessage").style.display = "none";
                     alert("Failed to fetch OWL data after multiple attempts. Please try again later.");
-                }
-            });
-        }
-
-        function generateTaxonomyTree(owlData) {
-            let hierarchy = parseOWLToHierarchy(owlData);
-            console.log("Final Parsed Hierarchy:", hierarchy); // Debugging
-            $('#taxonomyTree').jstree("destroy").empty();
-            $('#taxonomyTree').jstree({
-                'core': {
-                    'data': hierarchy
                 }
             });
         }
