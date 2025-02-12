@@ -107,6 +107,7 @@
 
         function generateTaxonomyTree(owlData) {
             let hierarchy = parseOWLToHierarchy(owlData);
+            console.log("Final Parsed Hierarchy:", hierarchy); // Debugging
             $('#taxonomyTree').jstree("destroy").empty();
             $('#taxonomyTree').jstree({
                 'core': {
