@@ -104,7 +104,7 @@ print(owl_data)
 The program generates an OWL representation of the accumulated taxonomy, ensuring that each taxonomic level is included only once, and prints it to the console.
 
 ## Citation
-Soares, F. M. (2024). Taxonomy OWLizer. Zenodo. [https://doi.org/10.5281/zenodo.14984136](https://doi.org/10.5281/zenodo.14984136)
+Soares, F. M. (2025). Taxonomy OWLizer. V.2. Zenodo. [https://doi.org/10.5281/zenodo.14984136](https://doi.org/10.5281/zenodo.14984136)
 
 
 
