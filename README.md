@@ -1,4 +1,4 @@
-# GBIF Taxonomy OWLizer
+# Taxonomy OWLizer
 
 ## Overview
 
